@@ -1,0 +1,282 @@
+{
+  "name": "entrega1_coderhouse",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -480,
+        -16
+      ],
+      "id": "7f3c4593-34e4-4925-95f4-116d14f0e0ee",
+      "name": "When chat message received",
+      "webhookId": "de1aacf3-faf7-4a55-8e29-df82a1224596"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {
+          "maxTokensToSample": 500,
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        160
+      ],
+      "id": "f227f3dd-b404-4699-8664-f685740e0704",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "aZcAHz8dok2zMI9E",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# ROL Y IDENTIDAD\nEres el \"Agente Recepcionista\", la cara y voz digital principal de la Plataforma Multiagente de Atención y Gestión para Clínica Larami. Tu estilo de comunicación es sumamente profesional, empático, cálido, persuasivo con enfoque comercial y orientado completamente a la excelencia en el servicio al cliente y cierre de ventas.\n\n# ÁMBITO Y FUENTE DE VERDAD\nTu única y exclusiva fuente de información autorizada para responder preguntas de negocio, costos, servicios, ubicación, horarios y políticas son las herramientas de Google Sheets conectadas a tu sistema (\"servicios\" y \"clinica_info\"). \n- NUNCA inventes precios, duraciones, direcciones, políticas de pago ni datos de la clínica. \n- Si un dato no se encuentra en tus herramientas, indícale al usuario que lo verificarás, solicita datos de contacto y deriva la conversación.\n\n# OBJETIVOS COMERCIALES DE LA SESIÓN\n1. Atender con rapidez y precisión las consultas de los pacientes interesados en los tratamientos estéticos de la clínica.\n2. Proporcionar información clara sobre descripciones comerciales, beneficios, duración y costos basados estrictamente en la fuente de datos.\n3. Guiar al usuario de forma natural hacia el agendamiento de su cita o valoración, explicando los requisitos previos de manera amable.\n\n# INSTRUCCIONES DE USO DE HERRAMIENTAS\n- Tienes acceso a dos herramientas de consulta (Catálogo de Servicios y Datos Generales de la Clínica).\n- Debes decidir de manera autónoma cuándo invocar cada herramienta según la duda del usuario. \n- Si el paciente pregunta por costos, duración o qué incluye un tratamiento, consulta obligatoriamente la herramienta de \"servicios\".\n- Si el paciente pregunta por ubicación, horarios, formas de pago, depósito o políticas de cancelación, consulta obligatoriamente la herramienta de \"clinica_info\".\n\n# REGLAS, LÍMITES Y ESCALAMIENTO\n1. **Separación de incumbencias médico-estéticas:** Si el usuario pregunta por procedimientos que requieren valoración médica obligatoria (como Toxina Botulínica o Ácido Hialurónico), puedes informarle el precio base y los beneficios estéticos generales, pero **debes recordarle obligatoriamente que requiere una valoración previa con el especialista** antes de realizar el procedimiento.\n2. **Prohibición de prescripción o contraindicaciones:** NUNCA des indicaciones médicas, diagnósticos, listas de contraindicaciones, efectos secundarios o instrucciones clínicas de recuperación. Eso corresponde estrictamente al Agente Médico en otra etapa de la arquitectura.\n3. **Restricción lingüística estricta:** Queda totalmente prohibido el uso de cualquier giro de lenguaje inclusivo (por ejemplo: usar \"todes\", \"amigxs\", \"nosotr@s\" o la letra \"e\" como morfema de género). Utiliza exclusivamente el español formal neutro tradicional.\n4. **Límite operativo:** Mantén tus respuestas concisas, estructuradas y orientadas a la conversión comercial.\n\n# PROTOCOLO DE CLASIFICACIÓN Y SALIDA UNIFICADA (JSON ESTRICTO)\nAl finalizar la interacción, debes evaluar el caso y generar obligatoriamente tu respuesta como un objeto JSON válido (sin texto plano adicional ni bloques markdown). \n\n## CRITERIOS DE CLASIFICACIÓN (STATUS):\n1. **\"success\" (Éxito Comercial):** Utilízalo cuando el usuario pregunte por información general de la clínica (ubicación, horarios, pagos, políticas) O cuando consulte sobre los servicios disponibles (precios, duración, beneficios generales de Limpieza Facial, Toxina Botulínica o Ácido Hialurónico) y hayas podido responderle con base en tus fuentes de verdad.\n2. **\"escalated\" (Escalamiento):** Utilízalo ÚNICAMENTE cuando la pregunta del usuario esté completamente fuera de las fuentes de verdad, involucre temas médicos complejos, contraindicaciones, diagnósticos, o sea un caso especial que no puedas resolver de forma autónoma.\n\n## REGLA DE CAMPOS NULOS (NULL):\nDebes mantener un esquema simétrico: los campos que no correspondan al status seleccionado deben marcarse estrictamente como `null`.\n\n## EJEMPLOS DE REFERENCIA (FEW-SHOT):\n\nEjemplo 1 (Caso de éxito comercial - Consulta de servicios):\n{\n  \"status\": \"success\",\n  \"servicio_interes\": \"Limpieza Facial Profunda\",\n  \"resumen_interaccion\": \"El paciente preguntó por el costo y la duración de la limpieza facial.\",\n  \"pregunta_usuario\": null,\n  \"datos_contacto\": null,\n  \"motivo\": null\n}\n\nEjemplo 2 (Caso de éxito comercial - Consulta de información general):\n{\n  \"status\": \"success\",\n  \"servicio_interes\": \"Ninguno\",\n  \"resumen_interaccion\": \"El paciente preguntó por la dirección de la clínica y los horarios de los sábados.\",\n  \"pregunta_usuario\": null,\n  \"datos_contacto\": null,\n  \"motivo\": null\n}\n\nEjemplo 3 (Caso de escalamiento / fuera de alcance):\n{\n  \"status\": \"escalated\",\n  \"servicio_interes\": null,\n  \"resumen_interaccion\": null,\n  \"pregunta_usuario\": \"¿Qué me recomiendan para curar una dermatitis severa en el rostro?\",\n  \"datos_contacto\": \"paciente@correo.com\",\n  \"motivo\": \"Requerimiento clínico complejo fuera del alcance comercial del recepcionista\"\n}\n\n\n# REGLA DE ORO DE REPORTE Y CIERRE\n- NO generes el objeto JSON de reporte en cada mensaje intermedio de saludo o cotización rápida. \n- Debes interactuar de manera conversacional y natural con el usuario respondiendo a sus dudas.\n- GENERA Y EMITE el objeto JSON unificado (status success/escalated) ÚNICAMENTE en dos escenarios:\n  1. Cuando el usuario muestre una intención clara de cierre, agendamiento o de ser contactado.\n  2. Cuando se active el protocolo de escalamiento porque la duda no tiene respuesta en tus fuentes o es un tema médico.",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "7d7338a0-4dd2-4ff0-a81e-d009bed85f08",
+      "name": "agente_recepcionista"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utiliza esta herramienta exclusivamente para consultar la información general, administrativa y de contacto de la clínica estética. Contiene datos atómicos sobre la ubicación exacta (dirección y zona), horarios de atención de lunes a domingo, métodos de pago aceptados (tarjetas, efectivo, transferencia y políticas de MSI), el monto del depósito de apartado de citas, las políticas de cancelación y los canales oficiales de contacto (teléfono, WhatsApp y correo electrónico). Debes invocar esta herramienta cada vez que el usuario pregunte dónde están ubicados, qué días u horas abren, cómo puede pagar, cuáles son las políticas de reprogramación o cancelación, o necesite comunicarse con la clínica.",
+        "documentId": {
+          "__rl": true,
+          "value": "1KW_ci5Mthoaw2ESR-Lo1FLvoojg3Zs5TwuJr-KBQ4d4",
+          "mode": "list",
+          "cachedResultName": "fuente_de_verdad_clinica",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KW_ci5Mthoaw2ESR-Lo1FLvoojg3Zs5TwuJr-KBQ4d4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 582092065,
+          "mode": "list",
+          "cachedResultName": "clinica_info",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KW_ci5Mthoaw2ESR-Lo1FLvoojg3Zs5TwuJr-KBQ4d4/edit#gid=582092065"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        96
+      ],
+      "id": "f8148e1a-2712-4e1f-8a9f-76ed1839adec",
+      "name": "tool_informacion clinica",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wcsCRED3GCvbXNAb",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utiliza esta herramienta exclusivamente para consultar el catálogo de servicios de la clínica estética. Contiene información atómica sobre los procedimientos disponibles (Limpieza Facial Profunda, Toxina Botulínica y Ácido Hialurónico), incluyendo su nombre comercial, categoría, descripción orientada a marketing, beneficios principales, duración en minutos, precio en pesos mexicanos (MXN) y un indicador crítico (requiere_valoracion_medica) que especifica si el paciente debe pasar por una consulta previa con el especialista. Debes invocar esta herramienta cada vez que el usuario pregunte por costos, duración, qué incluye un tratamiento, o características generales de los servicios estéticos.",
+        "documentId": {
+          "__rl": true,
+          "value": "1KW_ci5Mthoaw2ESR-Lo1FLvoojg3Zs5TwuJr-KBQ4d4",
+          "mode": "list",
+          "cachedResultName": "fuente_de_verdad_clinica",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KW_ci5Mthoaw2ESR-Lo1FLvoojg3Zs5TwuJr-KBQ4d4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 891724179,
+          "mode": "list",
+          "cachedResultName": "servicios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KW_ci5Mthoaw2ESR-Lo1FLvoojg3Zs5TwuJr-KBQ4d4/edit#gid=891724179"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        240
+      ],
+      "id": "2dc77f08-3118-4271-b403-7077bae2481b",
+      "name": "tool_informacion de cada servicio",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wcsCRED3GCvbXNAb",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 8
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        288
+      ],
+      "id": "3c9f8a7b-b36c-4ff5-8974-6ec81ff700e2",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos los datos estructurados que entrega el agente con el Structured Output Parser\nconst inputData = $input.item.json;\n\n// Extraemos los campos del esquema unificado\nconst status = inputData.status || \"success\";\nconst servicioInteres = inputData.servicio_interes || \"No especificado\";\nconst resumenInteraccion = inputData.resumen_interaccion || \"Interacción procesada correctamente\";\nconst preguntaUsuario = inputData.pregunta_usuario || \"N/A\";\nconst datosContacto = inputData.datos_contacto || \"No proporcionado\";\nconst motivo = inputData.motivo || \"N/A\";\n\n// Preparamos las variables dinámicas para el asunto y cuerpo del correo\nlet mailSubject = \"\";\nlet mailBody = \"\";\n\nif (status === \"escalated\") {\n  mailSubject = `[ALERTA CLÍNICA] Duda no resuelta / Requiere especialista`;\n  mailBody = `\nAtención equipo, se ha detectado una consulta que no pudo ser resuelta por el Agente Recepcionista:\n\n- Motivo del escalamiento: ${motivo}\n- Pregunta del usuario: ${preguntaUsuario}\n- Datos de contacto: ${datosContacto}\n  `.trim();\n} else {\n  mailSubject = `[LEAD COMERCIAL] Nuevo prospecto interesado en Clínica Larami`;\n  mailBody = `\nHola equipo comercial, se ha registrado un nuevo lead exitoso:\n\n- Servicio de interés: ${servicioInteres}\n- Resumen de la interacción: ${resumenInteraccion}\n  `.trim();\n}\n\n// Retornamos las variables preparadas listas para conectarse al nodo de Gmail\nreturn {\n  json: {\n    status: status,\n    subject: mailSubject,\n    body: mailBody\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "3ae5c2ab-f0a6-424a-bdf2-e99ee7d86d55",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "yabin.asi@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Notificación Clínica Larami</title>\n</head>\n<body style=\"margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\">\n  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"table-layout: fixed; background-color: #f4f6f9; padding: 30px 0;\">\n    <tr>\n      <td align=\"center\">\n        <!-- Contenedor Principal -->\n        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);\">\n          \n          <!-- Encabezado / Brand Bar -->\n          <tr>\n            <td style=\"background-color: #1e293b; padding: 24px 30px; text-align: center;\">\n              <h1 style=\"color: #ffffff; margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px;\">Clínica Larami &bull; Sistema Multiagente</h1>\n              <p style=\"color: #94a3b8; margin: 5px 0 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;\">Plataforma de Atención Comercial</p>\n            </td>\n          </tr>\n\n          <!-- Banner de Estado Dinámico -->\n          <tr>\n            <td style=\"padding: 24px 30px 0 30px;\">\n              <!-- Si el status es escalated, muestra una barra de alerta; si es success, una de éxito -->\n              <div style=\"padding: 12px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; text-align: center; background-color: #f8fafc; color: #334155; border-left: 4px solid #0ea5e9;\">\n                Estado del Reporte: <span style=\"text-transform: uppercase; font-weight: 700;\">{{ $json.status }}\n</span>\n              </div>\n            </td>\n          </tr>\n\n          <!-- Contenido del Cuerpo -->\n          <tr>\n            <td style=\"padding: 24px 30px; color: #334155; font-size: 15px; line-height: 1.6;\">\n              <h2 style=\"font-size: 18px; color: #0f172a; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;\">Detalles de la Interacción</h2>\n              \n              <!-- Texto dinámico inyectado desde el script -->\n              <div style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin-top: 16px; font-size: 14px; white-space: pre-line;\">\n{{ $json.body }}\n              </div>\n            </td>\n          </tr>\n\n          <!-- Pie de página / Footer -->\n          <tr>\n            <td style=\"background-color: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0;\">\n              <p style=\"color: #64748b; font-size: 12px; margin: 0;\">Este es un reporte automatizado generado por el Agente Recepcionista.</p>\n              <p style=\"color: #94a3b8; font-size: 11px; margin: 5px 0 0 0;\">&copy; 2026 Clínica Larami. Todos los derechos reservados.</p>\n            </td>\n          </tr>\n\n        </table>\n      </td>\n    </tr>\n  </table>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        -16
+      ],
+      "id": "33facc5d-3083-452d-8010-01c7e83162c4",
+      "name": "Send a message",
+      "webhookId": "94511701-5e97-40cd-8fda-e460f1a51abf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UYA0XJBETx5TQcdS",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "agente_recepcionista": [
+      {
+        "json": {
+          "output": "{\"status\":\"success\",\"servicio_interes\":\"Ácido Hialurónico\",\"resumen_interaccion\":\"El paciente indicó interés en el tratamiento de Ácido Hialurónico y proporcionó datos de contacto para agendar valoración.\",\"pregunta_usuario\":null,\"datos_contacto\":\"Karla Zuri, 5512345678\",\"motivo\":null}"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "agente_recepcionista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "agente_recepcionista",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tool_informacion clinica": {
+      "ai_tool": [
+        [
+          {
+            "node": "agente_recepcionista",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tool_informacion de cada servicio": {
+      "ai_tool": [
+        [
+          {
+            "node": "agente_recepcionista",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "agente_recepcionista",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agente_recepcionista": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f6a4e90c-bf1b-4fde-b48e-fdc5c5407547",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6a808d1e25f50239a20ac89b62f91408b7b0c2602a77f832c160b0afb95975f9"
+  },
+  "id": "sPonZs7niqGPrqRi",
+  "tags": []
+}
