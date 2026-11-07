@@ -48,18 +48,3 @@ Gmail Trigger → IF (auto-reply) ─Sí→ ignorar
 | primer_contacto | fecha ISO 8601 | Cuándo se registró |
 | ultimo_asunto | texto | Asunto del primer correo registrado |
 | estado | texto | NUEVO |
-
-## Configuración antes de activar
-
-1. Reemplaza `REEMPLAZAR_SHEET_ID` (ID de tu Google Sheet) y `REEMPLAZAR_ID_CANAL` (ID del canal de Slack).
-2. Asigna las credenciales de Gmail, Google Sheets, Slack y Groq.
-3. Crea la pestaña `crm_contactos` con los encabezados: `email | nombre | primer_contacto | ultimo_asunto | estado`.
-
-## Pruebas realizadas
-
-| Caso | Resultado esperado |
-|---|---|
-| Correo de cliente nuevo | Contacto creado, aviso en Slack, borrador en Gmail |
-| Mismo cliente escribe otra vez | No se crea un segundo contacto |
-| Correo con asunto "Out of office" | Se ignora en el IF |
-| Correo desde `no-reply@…` | Se ignora en el IF |
